@@ -1,0 +1,80 @@
+version: "3.2"
+services:
+  database:
+    container_name: influx
+    image: influx_image
+    restart: always 
+    ports:
+        - 8086:8086
+    build: 
+      context: .
+      dockerfile: influx/Dockerfile
+    networks:
+      default:
+        aliases:
+          - influxDB
+
+
+
+  broker:
+    container_name: 'rabbit'
+    image: rabbit_image
+    restart: always 
+    ports:
+        - 1883:1883
+        - 5672:5672
+        - 15672:15672
+    build: 
+      context: .
+      dockerfile: rabbitmq/Dockerfile
+    
+    environment:
+            - "RABBITMQ_DEFAULT_PASS=pass"
+            - "RABBITMQ_DEFAULT_USER=user"
+            - "RABBITMQ_DEFAULT_VHOST='vhost'"
+    networks:
+      default:
+        aliases:
+          - rabbit
+
+  gui:
+    container_name: grafana
+    image: grafana-image
+    restart: always
+    ports:
+      - "3000:3000"
+    build:
+      context: .
+      dockerfile: grafana/Dockerfile
+    depends_on:
+      - database
+
+  telegraf:
+    container_name: telegraf
+    image: telegraf-image
+    restart: always
+    build:
+      context: .
+      dockerfile: telegra/Dockerfile
+    environment:
+      - INFLUX_TOKEN=L1xU0_WQO6eRITpHm8voqz2l5GzsR-lD12wQt6BN6gB1mkzAomyLRjbCMyoKLoH3nu1c-EglraZF0RVdFwHtcw==
+    command: --config http://influxDB:8086/api/v2/telegrafs/0aa9d76b14922000
+    depends_on:
+      - database
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
